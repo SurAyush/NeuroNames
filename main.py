@@ -242,11 +242,20 @@ async def read_root():
 
 
 @app.get("/names/{number_names}")
-async def gen_name(number_names: int):
+async def gen_name(number_names: int, start: str = None):
     if not (number_names>0 and number_names<100):
         return "Number of names must be between 1 and 100"
 
-    nt = torch.tensor([[26]], dtype=torch.int32)
+    if start == None:
+        nt = torch.tensor([[26]], dtype=torch.int32)
+    else:
+        start = start.lower()            # converting to lower case
+        if len(start) > 15:
+            return "Context Length Exceeded"
+        if not start.isalpha():
+            return "Invalid Start"
+        nt = torch.tensor([[26] + [stoi[ch] for ch in start]], dtype=torch.int32)
+
     new_names = nt.repeat(number_names,1)
     new_names = model.generate(new_names)
     new_names = decoder(new_names.tolist())
